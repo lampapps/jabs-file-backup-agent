@@ -1,0 +1,93 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.iml
+
+# Runtime data
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+locks/*
+!locks/.gitkeep
+
+# Databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Configuration files (user-specific)
+config/global.yaml
+
+# Job configurations
+config/jobs/*.yaml
+!config/jobs/templates/
+
+# Scripts
+scripts/*
+!scripts/.gitkeep
+
+# Cache files
+.cache/
+*.cache
+
+# Process IDs
+*.pid
+jabs_agent.pid
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Backup artifacts
+backup_sets/
+*.tar.gz
+*.tar.bz2
+*.zip

@@ -1,0 +1,63 @@
+# =============================================================================
+# JABS (Just Another Backup System) Backup Job example Configuration Example
+# =============================================================================
+# Copy and rename the file to create a new job.
+# One file per job is required.
+# The configuration file must be in YAML format and follow the structure below.
+# The file should be named according to the job name (e.g., "my_job.yaml").
+
+# Job-specific settings
+job_name: "My Documents"  # The name of the backup job (used for logging and organization)
+
+# Ensure the `source` directory exists and contains the files you want to back up.
+source: "/home/user/Documents"  # The source directory to back up
+
+# Optional hook scripts (must be stored under the repo's scripts/ directory).
+# These run sequentially: pre_script -> backup -> post_script.
+# pre_script: "scripts/my_pre_backup.sh"
+# post_script: "scripts/my_post_backup.sh"
+
+# Include additional exclude patterns specific to this job
+exclude:
+#  - PrivateFolder/
+
+# Scheduling - Define when and how backups should run automatically. You can set more than 2 schedules.
+# Cron Syntax:
+  #        .---------------- minute (0 - 59)
+  #        | .------------- hour (0 - 23)
+  #        | | .---------- day of month (1 - 31)
+  #        | | | .------- month (1 - 12) OR jan,feb,mar,apr...
+  #        | | | | .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+  #        | | | | |                          Both 0 and 7 represent Sunday in many cron versions for historical reasons. 0 is standard.
+  #        * * * * * 
+schedules:
+  - cron: "0 2 * * 7"    # Runs at 2:00 AM, every Sunday
+    type: "full"         # full, diff, or incremental
+    enabled: false       # Scheduled to run, true or false
+
+  - cron: "0 2 * * 1-6"  # Runs at 2:00 AM, Monday to Saturday
+    type: "incremental"  # full, diff, or incremental          
+    enabled: false 
+
+# #######################################################################################################################
+# The below settings are set globally for all jobs. You may uncomment them to override global defaults for this job only.
+
+# destination: "/path/to/backup/folder"  # The destination directory for local backups
+
+# keep_sets: 2  # Number of backup sets to retain (older sets will be deleted automatically)
+# max_tarball_size: 2048  # Maximum size of each tarball in MB (e.g., 1024 MB = 1 GB)
+
+# Exclude all files and directories that match the patterns listed in config/common_exclude.yaml
+# use_common_exclude: true   # true | false
+
+# aws:
+#  profile: "default"          # AWS CLI profile to use (default if not specified)
+#  region: "us-east-1"         # AWS region (overrides profile region if specified)
+#  bucket: "my-bucket"         # S3 bucket name (required for cloud backups)
+#  storage_class: "STANDARD"   # S3 storage class (e.g., STANDARD, INTELLIGENT_TIERING, STANDARD_IA, ONEZONE_IA, GLACIER, DEEP_ARCHIVE)
+#  enabled: false              # true or false, false can be overridden by CLI
+
+# encryption: 
+#  method: gpg                              # Only 'gpg' supported for now
+#  passphrase_env: JABS_ENCRYPT_PASSPHRASE  # Name of env var holding passphrase
+#  enabled: false                           # true or false, false can be overridden by CLI
