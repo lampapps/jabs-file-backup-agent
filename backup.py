@@ -57,11 +57,11 @@ event_counter = {}  # Track event IDs locally for reference
 
 def create_event(job_name="", event_message="", backup_type="", encrypt=False, sync=False, config=None):
     """
-    Create a backup event and report to server.
+    Create a backup event and report to the dashboard.
 
-    For full backups: generates a new UUID as the server-side backup_set_id (group identifier).
-    For incremental/differential: looks up the parent full backup's UUID so the server can group them.
-    Each run also gets a unique run_id UUID for per-row server lookup.
+    For full backups: generates a new UUID as the dashboard-side backup_set_id (group identifier).
+    For incremental/differential: looks up the parent full backup's UUID so the dashboard can group them.
+    Each run also gets a unique run_id UUID for per-row dashboard lookup.
 
     Returns a unique run_id for tracking this backup operation.
     """
@@ -119,7 +119,7 @@ def update_event(event_id="", event_message="", status="running"):
         event_counter[event_id]["message"] = event_message
         event_counter[event_id]["status"] = status
 
-    # Report update to server with stage description
+    # Report update to dashboard with stage description
     if event_id and event_id in event_counter:
         event_info = event_counter[event_id]
         send_backup_stage(
@@ -144,7 +144,7 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
         event_counter[event_id]["message"] = event_message
         event_counter[event_id]["end_time"] = int(time.time())
 
-    # Report final status to server
+    # Report final status to dashboard
 
     if event_id and event_id in event_counter:
         event_info = event_counter[event_id]
@@ -223,7 +223,7 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
             )
         elif status == "skipped":
             # Still a terminal outcome — send as a completion event (event_type
-            # "backup_complete") with status="skipped" so the server finalizes
+            # "backup_complete") with status="skipped" so the dashboard finalizes
             # the job instead of leaving it stuck as "running".
             send_event(
                 event_type="backup_complete",
@@ -629,7 +629,7 @@ try:
                 runtime = 0
 
             # Compressed footprint: sum the on-disk size of the final tarballs
-            # (post-encryption if encryption was applied) for reporting to the server.
+            # (post-encryption if encryption was applied) for reporting to the dashboard.
             bytes_compressed = 0
             if tarball_paths:
                 for tar_path in tarball_paths:
@@ -661,7 +661,7 @@ try:
             logger = setup_logger("cli_error", log_file="cli_error.log")
             logger.error(f"Fatal error during execution: {e}", exc_info=True)
 
-            # Always notify the server so the job doesn't stay stuck in "running"
+            # Always notify the dashboard so the job doesn't stay stuck in "running"
             if event_id and event_id in event_counter:
                 try:
                     runtime = int(time.time()) - event_counter.get(event_id, {}).get("start_time", int(time.time()))
@@ -672,7 +672,7 @@ try:
                         runtime=runtime
                     )
                 except Exception as fe:
-                    logger.error(f"Failed to send error event to server: {fe}")
+                    logger.error(f"Failed to send error event to dashboard: {fe}")
 
             if __name__ == "__main__":
                 print(f"ERROR: {e}")

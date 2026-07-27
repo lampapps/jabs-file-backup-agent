@@ -40,7 +40,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
     # Generate backup_set_name early for event reporting
     backup_set_name = timestamp()
 
-    # Send start update to server
+    # Send start update to dashboard
     if event_id:
         send_backup_stage(
             job_name=job_name,
@@ -103,7 +103,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
         )
         logger.debug(f"Created backup set with ID {backup_set_id}")
 
-        # Always insert a local DB record; event_id is a server-side string, not a local DB integer
+        # Always insert a local DB record; event_id is a dashboard-side string, not a local DB integer
         backup_job_id = insert_backup_job(
             backup_set_id=backup_set_id,
             backup_type="full",

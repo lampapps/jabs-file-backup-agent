@@ -94,7 +94,7 @@ def update_status_file():
 
 def send_digest_email(global_config, now):
     """Return True if it's time to send the digest email based on cron syntax in config."""
-    # Digest email is server-side only
+    # Digest email is dashboard-side only
     return False
 
 

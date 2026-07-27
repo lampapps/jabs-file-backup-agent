@@ -49,7 +49,7 @@ def _create_backup_sets_table(cursor):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         job_name TEXT NOT NULL,           -- e.g., "test2", "jabs"
         set_name TEXT NOT NULL,           -- e.g., "20250706_130851" (from full backup)
-        server_set_id TEXT,               -- UUID4 sent to server as backup_set_id (shared by full + incrementals)
+        server_set_id TEXT,               -- UUID4 sent to the dashboard as backup_set_id (shared by full + incrementals)
         created_at REAL NOT NULL,         -- When the full backup was first run
         updated_at REAL NOT NULL,         -- Last activity in this set
         description TEXT,

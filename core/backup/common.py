@@ -22,17 +22,17 @@ from monitoring_client import sync_job_backup_sets
 from .utils import create_tar_archives, should_exclude, get_merged_exclude_patterns, extract_tar_info, generate_archived_manifest
 from .full import run_full_backup
 
-# Stub functions (server-side features)
+# Stub functions (dashboard-side features)
 def update_event(*args, **kwargs):
-    """Stub: Events are reported to server via API."""
+    """Stub: Events are reported to the dashboard via API."""
     pass
 
 def finalize_event(*args, **kwargs):
-    """Stub: Events are reported to server via API."""
+    """Stub: Events are reported to the dashboard via API."""
     pass
 
 def event_exists(*args, **kwargs):
-    """Stub: Events are reported to server via API."""
+    """Stub: Events are reported to the dashboard via API."""
     return False
 
 
@@ -347,9 +347,9 @@ def rotate_backups(job_dst, keep_sets, logger, config=None):
     else:
         logger.info(f"No filesystem backup sets to rotate for job '{job_name}'")
 
-    # STEP 3: Reconcile the server's records with what remains in the agent's
+    # STEP 3: Reconcile the dashboard's records with what remains in the agent's
     # own database for this job, so any sets rotated out here (or previously,
-    # if a prior sync call failed) are also removed from the server.
+    # if a prior sync call failed) are also removed from the dashboard.
     try:
         remaining_sets = list_backup_sets(job_name=job_name, limit=10000)
         active_backup_set_ids = [
@@ -357,7 +357,7 @@ def rotate_backups(job_dst, keep_sets, logger, config=None):
         ]
         sync_job_backup_sets(job_name, active_backup_set_ids)
     except Exception as e:
-        logger.error(f"Error syncing backup sets with server for job '{job_name}': {e}")
+        logger.error(f"Error syncing backup sets with dashboard for job '{job_name}': {e}")
 
     logger.info(f"Backup rotation completed for job '{job_name}'")
 

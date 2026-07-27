@@ -1,4 +1,4 @@
-"""Client for reporting agent events and metrics to the central JABS server."""
+"""Client for reporting agent events and metrics to the central JABS dashboard."""
 
 import requests
 import socket
@@ -12,11 +12,12 @@ from settings import ENV_PATH, VERSION, AGENT_TYPE
 import logging
 logger = logging.getLogger("monitoring")
 
-# Load environment to get server connection info if available
+# Load environment to get dashboard connection info if available
 load_dotenv(ENV_PATH)
 
-# Server URL (default to localhost for now, can be configured via env var)
-SERVER_URL = os.getenv("JABS_SERVER_URL", "http://localhost:5001")
+# Dashboard URL (default to localhost for now, can be configured via env var).
+# JABS_SERVER_URL is accepted as a deprecated alias for backward compatibility.
+DASHBOARD_URL = os.getenv("JABS_DASHBOARD_URL")
 
 
 def get_hostname() -> str:
@@ -56,7 +57,7 @@ def send_event(
     error_message: str = None,
     timestamp: Optional[int] = None
 ) -> bool:
-    """Send an event to the server with all fields at the top level."""
+    """Send an event to the dashboard with all fields at the top level."""
     try:
         payload = {
             "hostname": get_hostname(),
@@ -99,10 +100,10 @@ def send_event(
         if error_message is not None:
             payload["error_message"] = error_message
 
-        logger.debug(f"Sending event to server: {event_type} - {message}")
+        logger.debug(f"Sending event to dashboard: {event_type} - {message}")
 
         response = requests.post(
-            f"{SERVER_URL}/api/monitoring/events",
+            f"{DASHBOARD_URL}/api/monitoring/events",
             json=payload,
             timeout=5
         )
@@ -232,9 +233,9 @@ def send_scheduler_check(running_jobs: int = 0) -> bool:
 
 def sync_job_backup_sets(job_name: str, active_backup_set_ids: list) -> bool:
     """
-    Tell the server which backup_set_ids this agent still has locally for a job.
+    Tell the dashboard which backup_set_ids this agent still has locally for a job.
 
-    The server deletes any backup_jobs it has for this host+job whose
+    The dashboard deletes any backup_jobs it has for this host+job whose
     backup_set_id is not in the given list, keeping it in sync after the
     agent rotates old backup sets out of its own database.
 
@@ -244,7 +245,7 @@ def sync_job_backup_sets(job_name: str, active_backup_set_ids: list) -> bool:
             agent's local database for this job.
 
     Returns:
-        True if the server acknowledged the sync, False otherwise.
+        True if the dashboard acknowledged the sync, False otherwise.
     """
     try:
         payload = {
@@ -255,13 +256,13 @@ def sync_job_backup_sets(job_name: str, active_backup_set_ids: list) -> bool:
         }
 
         response = requests.post(
-            f"{SERVER_URL}/api/monitoring/sync-job-sets",
+            f"{DASHBOARD_URL}/api/monitoring/sync-job-sets",
             json=payload,
             timeout=10
         )
 
         if response.status_code == 200:
-            logger.debug(f"Synced backup sets for job '{job_name}' with server")
+            logger.debug(f"Synced backup sets for job '{job_name}' with dashboard")
             return True
 
         logger.warning(f"Failed to sync backup sets for job '{job_name}': {response.status_code} {response.text}")

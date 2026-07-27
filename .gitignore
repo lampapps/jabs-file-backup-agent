@@ -65,10 +65,6 @@ config/global.yaml
 config/jobs/*.yaml
 !config/jobs/templates/
 
-# Scripts
-scripts/*
-!scripts/.gitkeep
-
 # Cache files
 .cache/
 *.cache

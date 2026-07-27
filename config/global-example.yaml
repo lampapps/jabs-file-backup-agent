@@ -112,7 +112,7 @@ email:
 
   # Configure which backup events trigger immediate email notifications.
   # The agent always sends these right away (no digest/batching here — that
-  # is handled by the central JABS server on its own cron schedule).
+  # is handled by the central JABS dashboard on its own cron schedule).
   notify_on:
     error:
       enabled: true                   # true | false - Send error notifications

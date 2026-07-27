@@ -6,8 +6,8 @@ Runs independently on each backup host. It:
 - Executes backups on cron schedules (full/incremental/differential/dry-run)
 - Manages its own local SQLite metadata (`data/jabs_agent.sqlite`)
 - Optionally encrypts (GPG) and syncs archives to S3
-- Optionally reports events to the central [JABS Server](../../server/README.md) dashboard
-- Works fully offline if the server is unavailable — reporting failures never block a backup
+- Optionally reports events to the central [JABS Dashboard](../dashboard/README.md)
+- Works fully offline if the dashboard is unavailable — reporting failures never block a backup
 
 This directory is fully standalone: its own `.env`, `.gitignore`, `venv/`, `requirements.txt`, and config.
 
@@ -31,7 +31,7 @@ cd agents/backup_agent
 ./jabs-agent.sh stop
 ```
 
-`jabs-agent.sh` is fully self-contained (no shared code with the server launcher).
+`jabs-agent.sh` is fully self-contained (no shared code with the dashboard launcher).
 
 ### Manual runs (after `./jabs-agent.sh setup`)
 
@@ -50,7 +50,7 @@ venv/bin/python backup.py --job "Jim Home" --type full --encrypt --sync
 backup_agent/
 ├── backup.py              # runs a single backup job (entry point)
 ├── scheduler.py           # cron-style loop, calls backup.py logic in-process
-├── monitoring_client.py   # reports events to JABS Server (send_event, send_backup_start/stage/complete)
+├── monitoring_client.py   # reports events to JABS Dashboard (send_event, send_backup_start/stage/complete)
 ├── settings.py            # BASE_DIR, ENV_PATH, CONFIG_DIR, DB_PATH, LOG_DIR, VERSION
 ├── logger.py              # setup_logger, trim_all_logs
 ├── jabs-agent.sh          # standalone setup/start/stop/status launcher
@@ -62,7 +62,7 @@ backup_agent/
 ├── scripts/
 │   └── restore.py         # copied alongside archives for disaster recovery
 ├── config/
-│   ├── global.yaml        # local settings (source/destination defaults, encryption, aws, jabs_server)
+│   ├── global.yaml        # local settings (source/destination defaults, encryption, aws, dashboard URL)
 │   └── jobs/*.yaml        # per-job config (source, destination, exclude, keep_sets, schedules)
 ├── data/
 │   ├── jabs_agent.sqlite  # local backup metadata
@@ -78,7 +78,7 @@ JABS_ENCRYPT_PASSPHRASE=...
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_PROFILE=...
-JABS_SERVER_URL=http://central-jabs-server:5001   # optional, read by monitoring_client.py
+JABS_DASHBOARD_URL=http://central-jabs-dashboard:5001   # optional, read by monitoring_client.py
 ENV_MODE=production
 ```
 
@@ -116,21 +116,21 @@ schedules:
 
 Config merge rule (see `backup.py`): job-level `aws`/`encryption` dicts merge over global; flat keys (e.g. `destination`, `keep_sets`) fall back to global only if missing from the job file.
 
-## Reporting to the JABS Server
+## Reporting to the JABS Dashboard
 
-If `JABS_SERVER_URL` is set, the agent reports:
+If `JABS_DASHBOARD_URL` is set, the agent reports:
 - **Scheduler heartbeat** — periodic "I'm alive" signal (no backup context)
 - **Backup lifecycle events** — `send_backup_start`, `send_backup_stage`, `send_backup_complete` (see `monitoring_client.py` and `backup.py:create_event`)
 
-The agent's hostname + IP must first be **registered on the server** (Hosts page) or events are rejected with `403`. See [server README](../../server/README.md#registering-a-host-agent).
+The agent's hostname + IP must first be **registered on the dashboard** (Hosts page) or events are rejected with `403`. See [dashboard README](../dashboard/README.md#registering-a-host-agent).
 
-Reporting is best-effort: if the server is unreachable, the backup still runs and completes normally.
+Reporting is best-effort: if the dashboard is unreachable, the backup still runs and completes normally.
 
 ## Disaster Recovery
 
-The agent works without the server:
-1. **Server down?** Backups continue on schedule; reporting is skipped/retried, never blocking.
-2. **Restore needed?** Each backup set includes a `restore.py` script and manifest alongside the archives — no dependency on this codebase or the server.
+The agent works without the dashboard:
+1. **Dashboard down?** Backups continue on schedule; reporting is skipped/retried, never blocking.
+2. **Restore needed?** Each backup set includes a `restore.py` script and manifest alongside the archives — no dependency on this codebase or the dashboard.
 
 ## Storage Structure
 

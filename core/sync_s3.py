@@ -11,13 +11,13 @@ from logger import setup_logger
 from models.backup_jobs import update_job_sync_status
 from emailer import process_email_event
 
-# Stub functions (server-side features)
+# Stub functions (dashboard-side features)
 def update_event(*args, **kwargs):
-    """Stub: Events are reported to server via API."""
+    """Stub: Events are reported to the dashboard via API."""
     pass
 
 def event_exists(*args, **kwargs):
-    """Stub: Events are reported to server via API."""
+    """Stub: Events are reported to the dashboard via API."""
     return False
 
 

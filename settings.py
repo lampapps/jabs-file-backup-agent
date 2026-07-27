@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 VERSION = "0.10.0"
 
-# Type of agent, reported to the server so it can distinguish agent kinds
+# Type of agent, reported to the dashboard so it can distinguish agent kinds
 # (e.g. "File Backup", "Docker Backup", "Raspberry Pi Image") on the Hosts page.
 AGENT_TYPE = "File Backup"
 

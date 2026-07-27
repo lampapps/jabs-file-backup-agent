@@ -2,7 +2,7 @@
 
 Sends immediate email notifications for backup events (errors, completions)
 based on the `email.notify_on` configuration in config/global.yaml. Unlike the
-server (which sends a scheduled daily digest), the agent always sends
+dashboard (which sends a scheduled daily digest), the agent always sends
 immediately — there is no queueing/digest logic here.
 """
 
