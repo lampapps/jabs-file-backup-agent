@@ -13,7 +13,6 @@ VERSION = "0.10.0"
 # Type of agent, reported to the dashboard so it can distinguish agent kinds
 # (e.g. "File Backup", "Docker Backup", "Raspberry Pi Image") on the Hosts page.
 AGENT_TYPE = "File Backup"
-
 # --- Environment Configuration ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,6 +28,11 @@ load_dotenv(ENV_PATH)
 
 # Environment mode (development/production)
 ENV_MODE = os.environ.get("ENV_MODE", "production")
+
+# API key this agent uses to authenticate to the dashboard (sent as the
+# X-API-Key header on every request). Generated per-agent when the host is
+# registered on the dashboard's Hosts page.
+AGENT_KEY = os.environ.get("JABS_AGENT_KEY")
 
 # --- Application Configuration (Agent-specific) ---
 LOCK_DIR = os.path.join(BASE_DIR, 'locks')

@@ -6,7 +6,7 @@ import time
 import os
 from typing import Optional
 from dotenv import load_dotenv
-from settings import ENV_PATH, VERSION, AGENT_TYPE
+from settings import ENV_PATH, VERSION, AGENT_TYPE, AGENT_KEY
 
 # Setup logging
 import logging
@@ -18,6 +18,13 @@ load_dotenv(ENV_PATH)
 # Dashboard URL (default to localhost for now, can be configured via env var).
 # JABS_SERVER_URL is accepted as a deprecated alias for backward compatibility.
 DASHBOARD_URL = os.getenv("JABS_DASHBOARD_URL")
+
+
+def _auth_headers() -> dict:
+    """Headers required to authenticate to the dashboard API."""
+    if not AGENT_KEY:
+        logger.warning("JABS_AGENT_KEY is not set; dashboard requests will be rejected")
+    return {"X-API-Key": AGENT_KEY or ""}
 
 
 def get_hostname() -> str:
@@ -105,6 +112,7 @@ def send_event(
         response = requests.post(
             f"{DASHBOARD_URL}/api/monitoring/events",
             json=payload,
+            headers=_auth_headers(),
             timeout=5
         )
 
@@ -258,6 +266,7 @@ def sync_job_backup_sets(job_name: str, active_backup_set_ids: list) -> bool:
         response = requests.post(
             f"{DASHBOARD_URL}/api/monitoring/sync-job-sets",
             json=payload,
+            headers=_auth_headers(),
             timeout=10
         )
 
