@@ -34,6 +34,9 @@ ENV_MODE = os.environ.get("ENV_MODE", "production")
 # registered on the dashboard's Hosts page.
 AGENT_KEY = os.environ.get("JABS_AGENT_KEY")
 
+# Uptime Kuma push-monitor URL (see uptime_kuma_client.py). Empty disables it.
+UPTIME_KUMA_URL = os.environ.get("UPTIME_KUMA_URL", "")
+
 # --- Application Configuration (Agent-specific) ---
 LOCK_DIR = os.path.join(BASE_DIR, 'locks')
 CLI_SCRIPT = os.path.join(BASE_DIR, 'backup.py')

@@ -166,6 +166,64 @@ ensure_log_dir() {
     fi
 }
 
+# Ensure config/global.yaml and a starter config/jobs/job.yaml exist,
+# copying from the tracked example/template files. Never overwrites
+# existing files.
+ensure_config_files() {
+    local config_dir="$SCRIPT_DIR/config"
+    local jobs_dir="$config_dir/jobs"
+
+    if [[ ! -f "$config_dir/global.yaml" ]]; then
+        if [[ -f "$config_dir/global-example.yaml" ]]; then
+            cp "$config_dir/global-example.yaml" "$config_dir/global.yaml"
+            print_success "Created config/global.yaml from global-example.yaml"
+        else
+            print_error "config/global-example.yaml not found; cannot create global.yaml"
+            return 1
+        fi
+    else
+        print_success "config/global.yaml already exists."
+    fi
+
+    if [[ ! -d "$jobs_dir" ]]; then
+        mkdir -p "$jobs_dir"
+        print_success "Created config/jobs/ directory."
+
+        local job_template="$config_dir/templates/job.yaml"
+        if [[ -f "$job_template" ]]; then
+            cp "$job_template" "$jobs_dir/job.yaml"
+            print_success "Created config/jobs/job.yaml from templates/job.yaml"
+        else
+            print_warning "config/templates/job.yaml not found; skipped seeding an example job."
+        fi
+    else
+        print_success "config/jobs/ directory already exists."
+    fi
+
+    return 0
+}
+
+# Ensure .env exists, copying from the tracked .env.example if needed.
+# Never overwrites an existing .env.
+ensure_env_file() {
+    local env_file="$SCRIPT_DIR/.env"
+    local env_example="$SCRIPT_DIR/.env.example"
+
+    if [[ -f "$env_file" ]]; then
+        print_success ".env already exists."
+        return 0
+    fi
+
+    if [[ ! -f "$env_example" ]]; then
+        print_warning ".env.example not found; skipping .env creation. Create $env_file manually."
+        return 0
+    fi
+
+    cp "$env_example" "$env_file"
+    print_success "Created .env from .env.example — edit it before running the agent."
+    return 0
+}
+
 # Check if running
 is_running() {
     if [[ -f "$PID_FILE" ]]; then
@@ -222,6 +280,8 @@ setup_agent() {
     install_requirements || return 1
 
     ensure_log_dir
+    ensure_config_files || return 1
+    ensure_env_file
 
     # Initialize database
     print_status "Initializing agent database..."
@@ -236,10 +296,11 @@ setup_agent() {
         print_success "Agent setup complete!"
         echo ""
         echo "Next steps:"
-        echo "  1. Configure: $SCRIPT_DIR/config/global.yaml"
-        echo "  2. Create jobs: $SCRIPT_DIR/config/jobs/*.yaml"
-        echo "  3. Run scheduler: python $SCRIPT_DIR/scheduler.py (or via CRON: @hourly)"
-        echo "  4. Monitor logs: $0 logs"
+        echo "  1. Edit secrets/connection settings: $SCRIPT_DIR/.env"
+        echo "  2. Configure: $SCRIPT_DIR/config/global.yaml"
+        echo "  3. Create jobs: $SCRIPT_DIR/config/jobs/*.yaml"
+        echo "  4. Run scheduler: python $SCRIPT_DIR/scheduler.py (or via CRON: @hourly)"
+        echo "  5. Monitor logs: $0 logs"
         return 0
     else
         print_error "Agent setup validation failed."
@@ -322,9 +383,10 @@ DIRECTORIES:
 
 SETUP:
   1. Run: $0 setup
-  2. Edit: $SCRIPT_DIR/config/global.yaml
-  3. Create backup jobs in: $SCRIPT_DIR/config/jobs/
-  4. Add CRON job: crontab -e
+  2. Edit: $SCRIPT_DIR/.env
+  3. Edit: $SCRIPT_DIR/config/global.yaml
+  4. Create backup jobs in: $SCRIPT_DIR/config/jobs/
+  5. Add CRON job: crontab -e
      @hourly python $SCRIPT_DIR/scheduler.py
 
 EXAMPLES:

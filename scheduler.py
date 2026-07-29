@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from logger import setup_logger, trim_all_logs
 from settings import CONFIG_DIR, LOG_DIR, CLI_SCRIPT, SCHEDULER_STATUS_FILE, SCHEDULE_TOLERANCE, VERSION, GLOBAL_CONFIG_PATH, ENV_PATH
 from monitoring_client import send_scheduler_check
+from uptime_kuma_client import ping_uptime_kuma
 
 # --- Load .env file ---
 load_dotenv(ENV_PATH)
@@ -130,13 +131,14 @@ def main():
     logger.info("--- Scheduler Check Started ---")
     now = datetime.now()
 
+    global_config = load_yaml_config(GLOBAL_CONFIG_PATH)
+
     config_files = get_job_configs()
     if not config_files:
         logger.info("No configuration files found in %s", os.path.join(CONFIG_DIR, "jobs"))
         logger.info("--- Scheduler Check Finished ---")
+        ping_uptime_kuma("up", "Scheduler check ran; no job configs found")
         return
-
-    global_config = load_yaml_config(GLOBAL_CONFIG_PATH)
 
     triggered_jobs_count = 0
     triggered_jobs_info = []  # List to keep track of jobs that actually ran
@@ -231,8 +233,16 @@ def main():
 
         # Send scheduler check event for mini-chart display
         send_scheduler_check(running_jobs=triggered_jobs_count)
+
+        # Uptime Kuma heartbeat — pinged every time this scheduler check runs
+        # (i.e. on the cron cadence that invokes scheduler.py, typically every
+        # 15 minutes), independent of whether any individual job was due.
+        # This lets a push monitor detect "scheduler stopped running" long
+        # before it would cause a missed backup.
+        ping_uptime_kuma("up", f"Scheduler check completed; triggered {triggered_jobs_count} job(s)")
     except Exception as e:
         logger.error(f"An unexpected error occurred in the main scheduler loop: {e}", exc_info=True)
+        ping_uptime_kuma("down", f"Scheduler check failed: {e}")
     finally:
         trim_all_logs()
 

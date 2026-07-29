@@ -79,6 +79,7 @@ AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_PROFILE=...
 JABS_DASHBOARD_URL=http://central-jabs-dashboard:5001   # optional, read by monitoring_client.py
+UPTIME_KUMA_URL=...                                      # optional, read by uptime_kuma_client.py
 ENV_MODE=production
 ```
 
@@ -125,6 +126,26 @@ If `JABS_DASHBOARD_URL` is set, the agent reports:
 The agent's hostname + IP must first be **registered on the dashboard** (Hosts page) or events are rejected with `403`. See [dashboard README](../dashboard/README.md#registering-a-host-agent).
 
 Reporting is best-effort: if the dashboard is unreachable, the backup still runs and completes normally.
+
+## Uptime Kuma push monitor
+
+Independent of the JABS dashboard, `scheduler.py` can send a push heartbeat
+to a self-hosted [Uptime Kuma](https://github.com/louislam/uptime-kuma) push
+monitor every time it runs a check — i.e. on the cron cadence that invokes
+`scheduler.py` (typically every 15 minutes), **not** on individual backup
+job schedules. A daily/weekly job schedule would ping far too infrequently
+for Uptime Kuma to reliably detect "the scheduler stopped running" before a
+backup is actually missed; pinging on every scheduler check instead lets you
+set the push monitor's expected interval to match your cron cadence and get
+alerted the moment the scheduler itself stops firing.
+
+Create a Push monitor in Uptime Kuma, set its expected heartbeat interval to
+match your cron schedule (e.g. every 15 minutes), then set `UPTIME_KUMA_URL`
+in `.env` to its push URL. This is a single agent-wide setting (env var, not
+YAML) — consistent with `JABS_DASHBOARD_URL`, since the push URL embeds a
+secret token in its path the same way an API key would. Disabled by default
+(empty `UPTIME_KUMA_URL`). Ping failures (monitor unreachable, bad URL) are
+logged as warnings and never fail the scheduler run.
 
 ## Disaster Recovery
 

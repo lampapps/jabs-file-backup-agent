@@ -45,50 +45,6 @@ encryption:
   method: gpg  # Only 'gpg' supported for now
   passphrase_env: JABS_ENCRYPT_PASSPHRASE  # Name of env var holding passphrase
 
-
-# --- Monitoring Configuration ---
-# Configure network monitoring for discovering and managing multiple JABS instances
-# Useful for monitoring backup status across multiple servers/machines
-monitoring:
-  enable_monitoring: true               # true | false - Enable monitoring functionality
-  shared_monitor_dir: "/path/to/shared/directory"  # Shared directory accessible by all monitored instances
-                                        # Examples: "/mnt/nas/jabs-monitor", "/shared/monitoring"
-                                        # Must be accessible by all JABS instances you want to monitor
-  ip_range_start: "192.168.1.2"         # Start of IP address range for auto-discovery
-                                        # Adjust to match your local network range
-  ip_range_end: "192.168.1.254"         # End of IP address range for auto-discovery
-                                        # Example: 192.168.1.x, 10.0.0.x, etc.
-  port: 5000                            # Port number to scan for JABS instances during discovery
-                                        # Default JABS web interface port
-  default_grace_period: 60              # Grace period in minutes before marking instance as overdue
-                                        # How long to wait after scheduled time before alerting
-                                        # Recommended: 30-120 minutes depending on backup duration
-
-
-# --- Dashboard Configuration ---
-# Configure what storage locations appear in the web dashboard for monitoring
-
-# Network drives and mount points to display storage usage
-drives:
-  - path: "/"                          # Root filesystem
-    label: "Root"
-  - path: "/mnt/backup-drive"           # Example: External backup drive
-    label: "Backup Drive"
-# - path: "/mnt/nas"                    # Example: Network attached storage
-#   label: "NAS Storage"
-# - path: "/media/usb-backup"           # Example: USB backup drive
-#   label: "USB Backup"
-
-# S3 buckets to monitor (requires valid AWS credentials)
-# Remove or comment out if not using S3
-s3_buckets:
-  - bucket: "example-jabs"              # Replace with your actual S3 bucket names
-    label: "JABS"
-  - bucket: "example-backup"
-    label: "Backup"
-# - bucket: "company-archive"           # Example: Long-term archive bucket
-#   label: "Archive"
-
 # --- Email Notification Configuration ---
 # Configure SMTP email notifications for backup events
 # Requires JABS_SMTP_USER and JABS_SMTP_PASS environment variables in .env file
