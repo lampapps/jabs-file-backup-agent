@@ -58,7 +58,7 @@ def check_s3_accessible(config, logger):
         logger.error(f"Error checking S3 bucket '{bucket}': {e}")
         return False
 
-def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, event_id=None, job_config_path=None, global_config=None):
+def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, event_id=None, server_set_id=None, job_config_path=None, global_config=None):
     """
     Perform a dryrun backup that mimics a full backup but only writes to the database.
     - Checks source and destination folder access

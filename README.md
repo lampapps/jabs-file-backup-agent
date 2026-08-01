@@ -166,13 +166,6 @@ The agent works without the dashboard:
             └── manifest_YYYYMMDD_HHMMSS.html
 ```
 
-## Testing
-
-```bash
-cd /home/jim/jabs_dev
-python3 -m unittest tests.test_agent_database -v
-```
-
 ## Logging
 
 - `data/logs/scheduler.log` — scheduler runs, trimmed to `MAX_LOG_LINES` each run

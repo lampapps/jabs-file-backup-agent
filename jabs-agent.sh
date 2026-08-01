@@ -25,6 +25,7 @@ fi
 VENV_PATH="$SCRIPT_DIR/venv"
 PYTHON_VENV="$VENV_PATH/bin/python"
 RUN_SCRIPT="$SCRIPT_DIR/scheduler.py"
+CLI_SCRIPT="$SCRIPT_DIR/backup.py"
 PID_FILE="$SCRIPT_DIR/jabs_agent.pid"
 LOG_FILE="$SCRIPT_DIR/data/logs/agent.log"
 
@@ -359,6 +360,45 @@ reset_app() {
     return 0
 }
 
+# Print ready-to-copy commands for running the scheduler and each configured
+# backup job on this host, using this machine's actual paths (including the
+# venv interpreter) so they can be pasted directly into a terminal.
+print_copy_paste_commands() {
+    echo "COPY/PASTE COMMANDS (this host):"
+    echo ""
+    echo "  CLI syntax reference (backup.py):"
+    echo "    $PYTHON_VENV $CLI_SCRIPT --job JOB_NAME --type TYPE [--encrypt] [--sync]"
+    echo ""
+    echo "      --job      Job name (matches a file in config/jobs/, without .yaml)"
+    echo "      --type     full | incremental | differential | dryrun"
+    echo "      --encrypt  Encrypt the backup (optional)"
+    echo "      --sync     Sync the backup to S3 after completion (optional)"
+    echo ""
+    echo "  Run scheduler manually:"
+    echo "    $PYTHON_VENV $RUN_SCRIPT"
+    echo ""
+
+    local jobs_dir="$SCRIPT_DIR/config/jobs"
+    local found=false
+    if [[ -d "$jobs_dir" ]]; then
+        for job_file in "$jobs_dir"/*.yaml; do
+            [[ -e "$job_file" ]] || continue
+            found=true
+            local job_name
+            job_name="$(basename "$job_file" .yaml)"
+            echo "  Run job '$job_name' (dry run example — swap --type/flags per the syntax above):"
+            echo "    $PYTHON_VENV $CLI_SCRIPT --job \"$job_name\" --type dryrun"
+            echo ""
+        done
+    fi
+
+    if ! $found; then
+        echo "  (No job configs found in $jobs_dir yet — create one first, e.g. from config/templates/job.yaml)"
+        echo ""
+    fi
+}
+
+
 # Show help
 show_help() {
     cat << EOF
@@ -387,7 +427,7 @@ SETUP:
   3. Edit: $SCRIPT_DIR/config/global.yaml
   4. Create backup jobs in: $SCRIPT_DIR/config/jobs/
   5. Add CRON job: crontab -e
-     @hourly python $SCRIPT_DIR/scheduler.py
+     0 * * * * $PYTHON_VENV $RUN_SCRIPT > /dev/null 2>&1
 
 EXAMPLES:
   # Initial setup
@@ -403,6 +443,7 @@ EXAMPLES:
   $0 reset
 
 EOF
+    print_copy_paste_commands
 }
 
 # Main function
