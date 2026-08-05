@@ -71,7 +71,9 @@ def create_event(job_name="", event_message="", backup_type="", encrypt=False, s
     start_time = int(time.time())
     run_id = str(uuid.uuid4())
 
-    if backup_type == "full":
+    if backup_type in ("full", "dryrun"):
+        # Full backups start a new set; dry runs are standalone test runs and
+        # should never be grouped into an existing (or previous) backup set.
         server_set_id = str(uuid.uuid4())
         backup_set_name = timestamp()
     else:

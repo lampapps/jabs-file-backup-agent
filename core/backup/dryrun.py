@@ -78,7 +78,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
         send_backup_stage(
             job_name=job_name,
             backup_type=backup_type,
-            backup_set_id=event_id,
+            run_id=event_id,
+            backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
             stage=f"Initializing dryrun backup for {job_name}",
             encrypt=encrypt,
@@ -93,7 +94,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
         send_backup_stage(
             job_name=job_name,
             backup_type=backup_type,
-            backup_set_id=event_id,
+            run_id=event_id,
+            backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
             stage="Validating source and destination paths",
             encrypt=encrypt,
@@ -128,7 +130,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             send_backup_stage(
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_id=event_id,
+                run_id=event_id,
+                backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
                 stage="Checking S3 bucket access",
                 encrypt=encrypt,
@@ -158,7 +161,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
         send_backup_stage(
             job_name=job_name,
             backup_type=backup_type,
-            backup_set_id=event_id,
+            run_id=event_id,
+            backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
             stage="Loading exclude patterns",
             encrypt=encrypt,
@@ -174,7 +178,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
         send_backup_stage(
             job_name=job_name,
             backup_type=backup_type,
-            backup_set_id=event_id,
+            run_id=event_id,
+            backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
             stage="Scanning for files to backup (dry run)",
             encrypt=encrypt,
@@ -191,7 +196,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             send_backup_stage(
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_id=event_id,
+                run_id=event_id,
+                backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
                 stage="No files found for dryrun backup",
                 encrypt=encrypt,
@@ -225,7 +231,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             send_backup_stage(
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_id=event_id,
+                run_id=event_id,
+                backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
                 stage="Creating database entries (dry run)",
                 encrypt=encrypt,
@@ -241,7 +248,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 job_name=job_name,
                 set_name=backup_set_id_string,
                 config_settings=config_snapshot,
-                source_path=config.get('source') if config else None  # Add source path
+                source_path=config.get('source') if config else None,  # Add source path
+                server_set_id=server_set_id
             )
             
             # Step 2: Create backup job in database
@@ -265,7 +273,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             send_backup_stage(
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_id=event_id,
+                run_id=event_id,
+                backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
                 stage="Processing file information (dry run)",
                 encrypt=encrypt,
@@ -300,7 +309,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 send_backup_stage(
                     job_name=job_name,
                     backup_type=backup_type,
-                    backup_set_id=event_id,
+                    run_id=event_id,
+                    backup_set_id=server_set_id or event_id,
                     backup_set_name=backup_set_name,
                     stage=f"Adding {len(file_records)} file records to database (dry run)",
                     encrypt=encrypt,
@@ -343,7 +353,8 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             send_backup_stage(
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_id=event_id,
+                run_id=event_id,
+                backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
                 stage=f"Dryrun Manifest ({len(file_records)} files)",
                 encrypt=encrypt,
