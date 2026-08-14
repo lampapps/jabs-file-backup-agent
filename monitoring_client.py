@@ -128,6 +128,51 @@ def send_event(
         return False
 
 
+def send_backup_set_purged(server_set_id: str, message: str = None) -> bool:
+    """
+    Tell the dashboard that a backup set was rotated (purged) out of local storage.
+
+    Marks every backup_jobs row sharing this backup_set_id on the dashboard
+    with status='purged' and logs a 'purged' event on each — this does NOT
+    delete any dashboard rows. Call this right after a local backup set (and
+    its DB records) has actually been deleted (see
+    core/backup/common.py:rotate_backups).
+
+    Args:
+        server_set_id: The dashboard-side backup_set_id shared by the full
+            backup and any incremental/differential children in the set.
+        message: Optional human-readable message; defaults to a generic one.
+
+    Returns:
+        True if the dashboard acknowledged the purge, False otherwise.
+    """
+    try:
+        payload = {
+            "hostname": get_hostname(),
+            "ip_address": get_ip_address(),
+            "backup_set_id": server_set_id,
+            "message": message or "Backup set rotated out of local storage",
+        }
+
+        response = requests.post(
+            f"{DASHBOARD_URL}/api/monitoring/backup-set-purged",
+            json=payload,
+            headers=_auth_headers(),
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            logger.debug(f"Reported purged backup set '{server_set_id}' to dashboard")
+            return True
+
+        logger.warning(f"Failed to report purged backup set '{server_set_id}': {response.status_code} {response.text}")
+        return False
+
+    except requests.exceptions.RequestException as e:
+        logger.debug(f"Failed to report purged backup set '{server_set_id}': {e}")
+        return False
+
+
 def send_backup_start(
     job_name: str,
     backup_type: str,
@@ -237,46 +282,3 @@ def send_scheduler_check(running_jobs: int = 0) -> bool:
         message=f"Scheduler check completed. {running_jobs} job(s) triggered.",
         stage="Scheduler check"
     )
-
-
-def sync_job_backup_sets(job_name: str, active_backup_set_ids: list) -> bool:
-    """
-    Tell the dashboard which backup_set_ids this agent still has locally for a job.
-
-    The dashboard deletes any backup_jobs it has for this host+job whose
-    backup_set_id is not in the given list, keeping it in sync after the
-    agent rotates old backup sets out of its own database.
-
-    Args:
-        job_name: The job name to reconcile.
-        active_backup_set_ids: List of server_set_id values still present in the
-            agent's local database for this job.
-
-    Returns:
-        True if the dashboard acknowledged the sync, False otherwise.
-    """
-    try:
-        payload = {
-            "hostname": get_hostname(),
-            "ip_address": get_ip_address(),
-            "job_name": job_name,
-            "active_backup_set_ids": active_backup_set_ids,
-        }
-
-        response = requests.post(
-            f"{DASHBOARD_URL}/api/monitoring/sync-job-sets",
-            json=payload,
-            headers=_auth_headers(),
-            timeout=10
-        )
-
-        if response.status_code == 200:
-            logger.debug(f"Synced backup sets for job '{job_name}' with dashboard")
-            return True
-
-        logger.warning(f"Failed to sync backup sets for job '{job_name}': {response.status_code} {response.text}")
-        return False
-
-    except requests.exceptions.RequestException as e:
-        logger.debug(f"Failed to sync backup sets for job '{job_name}': {e}")
-        return False

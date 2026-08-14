@@ -14,11 +14,11 @@ import platform
 import portalocker
 
 from logger import setup_logger, ensure_dir
-from models.backup_sets import get_or_create_backup_set, get_backup_set_by_job_and_set, delete_backup_set, list_backup_sets
+from models.backup_sets import get_or_create_backup_set, get_backup_set_by_job_and_set, delete_backup_set
 from models.backup_jobs import get_last_backup_job, get_last_full_backup_job, insert_backup_job, finalize_backup_job
 from models.backup_files import insert_files
 from models.db_core_agent import get_db_connection
-from monitoring_client import sync_job_backup_sets
+from monitoring_client import send_backup_set_purged
 from .utils import create_tar_archives, should_exclude, get_merged_exclude_patterns, extract_tar_info, generate_archived_manifest
 from .full import run_full_backup
 
@@ -335,6 +335,15 @@ def rotate_backups(job_dst, keep_sets, logger, config=None):
                     db_result["jobs_deleted"] += int(job_count)
                     db_result["files_deleted"] += int(file_count)
 
+                    # Notify the dashboard so its job history reflects the purge
+                    # (marks status='purged' + logs an event; never deletes rows).
+                    server_set_id = bs_row["server_set_id"] if "server_set_id" in bs_row.keys() else None
+                    if server_set_id:
+                        try:
+                            send_backup_set_purged(server_set_id)
+                        except Exception as e:
+                            logger.error(f"Error reporting purged backup set '{server_set_id}' to dashboard: {e}")
+
             if db_result["sets_deleted"]:
                 logger.info(
                     "Database rotation results: %s sets, %s jobs, %s file records deleted",
@@ -346,18 +355,6 @@ def rotate_backups(job_dst, keep_sets, logger, config=None):
             logger.error(f"Error rotating database records for job '{job_name}': {e}")
     else:
         logger.info(f"No filesystem backup sets to rotate for job '{job_name}'")
-
-    # STEP 3: Reconcile the dashboard's records with what remains in the agent's
-    # own database for this job, so any sets rotated out here (or previously,
-    # if a prior sync call failed) are also removed from the dashboard.
-    try:
-        remaining_sets = list_backup_sets(job_name=job_name, limit=10000)
-        active_backup_set_ids = [
-            row["server_set_id"] for row in remaining_sets if row["server_set_id"]
-        ]
-        sync_job_backup_sets(job_name, active_backup_set_ids)
-    except Exception as e:
-        logger.error(f"Error syncing backup sets with dashboard for job '{job_name}': {e}")
 
     logger.info(f"Backup rotation completed for job '{job_name}'")
 

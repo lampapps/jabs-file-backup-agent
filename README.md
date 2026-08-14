@@ -51,7 +51,7 @@ venv/bin/python backup.py --job "Jim Home" --type full --encrypt --sync
 file_backup_agent/
 ├── backup.py              # runs a single backup job (entry point)
 ├── scheduler.py           # cron-style loop, calls backup.py logic in-process
-├── monitoring_client.py   # reports events to JABS Dashboard (send_event, send_backup_start/stage/complete, sync_job_backup_sets)
+├── monitoring_client.py   # reports events to JABS Dashboard (send_event, send_backup_start/stage/complete, send_backup_set_purged)
 ├── emailer.py             # immediate email notifications (error / backup_complete), independent of the dashboard's digest
 ├── uptime_kuma_client.py  # optional Uptime Kuma push-monitor heartbeat
 ├── settings.py            # BASE_DIR, ENV_PATH, CONFIG_DIR, DB_PATH, LOG_DIR, VERSION, AGENT_KEY
@@ -144,7 +144,12 @@ If `JABS_DASHBOARD_URL` is set, the agent reports:
 
 - **Scheduler heartbeat** — periodic "I'm alive" signal (no backup context)
 - **Backup lifecycle events** — `send_backup_start`, `send_backup_stage`, `send_backup_complete` (see `monitoring_client.py` and `backup.py:create_event`)
-- **Set reconciliation** — `sync_job_backup_sets(job_name, active_backup_set_ids)`, called at the end of local rotation so the dashboard purges any backup_jobs rows for sets this agent has already rotated out locally
+- **Local set rotation** — `send_backup_set_purged(server_set_id)`, called right after `rotate_backups()` deletes a backup set's local files and DB records. Marks the dashboard's matching `backup_jobs` rows (there may be several — a full backup plus its incremental/differential children share one `backup_set_id`) with `status="purged"` and logs a `"purged"` event on each. This never deletes anything on the dashboard.
+
+The dashboard purges (deletes) its own job records on a universal,
+dashboard-side retention schedule (`retention.max_days`) — the agent does
+not need to (and has no API to) delete dashboard records, regardless of its
+own local `keep_sets` rotation. See the [dashboard README](../dashboard/README.md#scheduler-digest-email--retention-purge).
 
 The agent must first be **registered on the dashboard** (Agents page) to obtain a unique `agent_key`, which is set as `JABS_AGENT_KEY` in `.env` and sent as the `X-API-Key` header on every request — not validated by hostname/IP. Requests with a missing/invalid/disabled key are rejected (`401`/`403`). See [dashboard README](../dashboard/README.md#registering-an-agent).
 
