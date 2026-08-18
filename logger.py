@@ -9,9 +9,13 @@ from settings import LOG_DIR, MAX_LOG_LINES, ENV_MODE
 class JobNameFormatter(logging.Formatter):
     """Custom formatter to include the job name in every log message."""
     def format(self, record):
+        original_msg = record.msg
         if hasattr(record, "job_name"):
-            record.msg = f"{record.job_name} - {record.msg}"
-        return super().format(record)
+            record.msg = f"{record.job_name} - {original_msg}"
+        try:
+            return super().format(record)
+        finally:
+            record.msg = original_msg
 
 def setup_logger(job_name, log_file="backup.log"):
     """
