@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 
 
-VERSION = "0.10.4"
+VERSION = "0.10.5"
 
 # Type of agent, reported to the dashboard so it can distinguish agent kinds
 # (e.g. "File Backup", "Docker Backup", "Raspberry Pi Image") on the Hosts page.

@@ -81,9 +81,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             run_id=event_id,
             backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
-            stage=f"Initializing dryrun backup for {job_name}",
-            encrypt=encrypt,
-            sync=sync
+            stage=f"Initializing dryrun backup for {job_name}"
         )
 
     src = config.get("source")
@@ -97,9 +95,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             run_id=event_id,
             backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
-            stage="Validating source and destination paths",
-            encrypt=encrypt,
-            sync=sync
+            stage="Validating source and destination paths"
         )
 
     # Test source folder
@@ -133,9 +129,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage="Checking S3 bucket access",
-                encrypt=encrypt,
-                sync=sync
+                stage="Checking S3 bucket access"
             )
 
         if not check_s3_accessible(config, logger):
@@ -164,9 +158,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             run_id=event_id,
             backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
-            stage="Loading exclude patterns",
-            encrypt=encrypt,
-            sync=sync
+            stage="Loading exclude patterns"
         )
 
     # Use the centralized function to get merged exclude patterns
@@ -181,9 +173,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
             run_id=event_id,
             backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
-            stage="Scanning for files to backup (dry run)",
-            encrypt=encrypt,
-            sync=sync
+            stage="Scanning for files to backup (dry run)"
         )
     
     # Get files that would be backed up
@@ -199,9 +189,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage="No files found for dryrun backup",
-                encrypt=encrypt,
-                sync=sync
+                stage="No files found for dryrun backup"
             )
         return "skipped", event_id, backup_set_id_string
 
@@ -234,9 +222,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage="Creating database entries (dry run)",
-                encrypt=encrypt,
-                sync=sync
+                stage="Creating database entries (dry run)"
             )
         
         # If we don't have a backup_job_id or backup_set_id from the event,
@@ -276,9 +262,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage="Processing file information (dry run)",
-                encrypt=encrypt,
-                sync=sync
+                stage="Processing file information (dry run)"
             )
             
         for file_path in files:
@@ -312,9 +296,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                     run_id=event_id,
                     backup_set_id=server_set_id or event_id,
                     backup_set_name=backup_set_name,
-                    stage=f"Adding {len(file_records)} file records to database (dry run)",
-                    encrypt=encrypt,
-                    sync=sync
+                    stage=f"Adding {len(file_records)} file records to database (dry run)"
                 )
                 
             insert_files(backup_job_id, file_records)
@@ -356,9 +338,7 @@ def run_dryrun_backup(config, backup_type="dryrun", encrypt=False, sync=False, e
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage=f"Dryrun Manifest ({len(file_records)} files)",
-                encrypt=encrypt,
-                sync=sync
+                stage=f"Dryrun Manifest ({len(file_records)} files)"
             )
 
         logger.debug(f"DRYRUN backup completed for {src}")

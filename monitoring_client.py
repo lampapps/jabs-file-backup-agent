@@ -52,8 +52,6 @@ def send_event(
     job_name: str = None,
     backup_type: str = None,
     backup_set_name: str = None,
-    encrypt: bool = None,
-    sync: bool = None,
     stage: str = None,
     status: str = None,
     duration_seconds: float = None,
@@ -86,10 +84,6 @@ def send_event(
             payload["backup_type"] = backup_type
         if backup_set_name is not None:
             payload["backup_set_name"] = backup_set_name
-        if encrypt is not None:
-            payload["encrypt"] = encrypt
-        if sync is not None:
-            payload["sync"] = sync
         if stage is not None:
             payload["stage"] = stage
         if status is not None:
@@ -178,9 +172,7 @@ def send_backup_start(
     backup_type: str,
     backup_set_id: str,
     backup_set_name: str,
-    run_id: str = None,
-    encrypt: bool = False,
-    sync: bool = False
+    run_id: str = None
 ) -> bool:
     return send_event(
         event_type="heartbeat",
@@ -190,8 +182,6 @@ def send_backup_start(
         job_name=job_name,
         backup_type=backup_type,
         backup_set_name=backup_set_name,
-        encrypt=encrypt,
-        sync=sync,
         stage="Starting backup"
     )
 
@@ -202,9 +192,7 @@ def send_backup_stage(
     backup_set_id: str,
     backup_set_name: str,
     stage: str,
-    run_id: str = None,
-    encrypt: bool = False,
-    sync: bool = False
+    run_id: str = None
 ) -> bool:
     return send_event(
         event_type="heartbeat",
@@ -214,8 +202,6 @@ def send_backup_stage(
         job_name=job_name,
         backup_type=backup_type,
         backup_set_name=backup_set_name,
-        encrypt=encrypt,
-        sync=sync,
         stage=stage
     )
 
@@ -230,8 +216,6 @@ def send_backup_complete(
     files_backed_up: int = 0,
     bytes_backed_up: int = 0,
     bytes_compressed: int = 0,
-    encrypt: bool = False,
-    sync: bool = False,
     success: bool = True,
     error_message: Optional[str] = None
 ) -> bool:
@@ -254,8 +238,6 @@ def send_backup_complete(
         job_name=job_name,
         backup_type=backup_type,
         backup_set_name=backup_set_name,
-        encrypt=encrypt,
-        sync=sync,
         stage="Completed" if success else "Error",
         status=status,
         duration_seconds=duration_seconds,

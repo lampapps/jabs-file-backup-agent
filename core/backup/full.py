@@ -48,9 +48,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
             run_id=event_id,
             backup_set_id=server_set_id or event_id,
             backup_set_name=backup_set_name,
-            stage=f"Initializing full backup for {job_name}",
-            encrypt=encrypt,
-            sync=sync
+            stage=f"Initializing full backup for {job_name}"
         )
 
     # Get merged exclude patterns using the utility function
@@ -127,9 +125,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage=f"Scanning source directory with {len(exclude_patterns)} exclude patterns",
-                encrypt=encrypt,
-                sync=sync
+                stage=f"Scanning source directory with {len(exclude_patterns)} exclude patterns"
             )
 
         logger.debug(f"Collecting files with {len(exclude_patterns)} exclude patterns")
@@ -144,9 +140,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage=f"Creating tar archives for {len(files)} files",
-                encrypt=encrypt,
-                sync=sync
+                stage=f"Creating tar archives for {len(files)} files"
             )
 
         tarball_paths = create_tar_archives(
@@ -166,9 +160,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
                 run_id=event_id,
                 backup_set_id=server_set_id or event_id,
                 backup_set_name=backup_set_name,
-                stage="Extracting file information from tarballs",
-                encrypt=encrypt,
-                sync=sync
+                stage="Extracting file information from tarballs"
             )
 
         # Extract file info from all tarballs
@@ -188,9 +180,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
                     run_id=event_id,
                     backup_set_id=server_set_id or event_id,
                     backup_set_name=backup_set_name,
-                    stage=f"Updating database with {len(new_tar_info)} files",
-                    encrypt=encrypt,
-                    sync=sync
+                    stage=f"Updating database with {len(new_tar_info)} files"
                 )
             logger.debug(f"Inserting {len(new_tar_info)} files into database...")
             insert_files(backup_job_id, new_tar_info)
@@ -206,9 +196,7 @@ def run_full_backup(config, backup_type="full", encrypt=False, sync=False, event
                     run_id=event_id,
                     backup_set_id=server_set_id or event_id,
                     backup_set_name=backup_set_name,
-                    stage="Generating manifest files",
-                    encrypt=encrypt,
-                    sync=sync
+                    stage="Generating manifest files"
                 )
 
             html_manifest_path = generate_archived_manifest(

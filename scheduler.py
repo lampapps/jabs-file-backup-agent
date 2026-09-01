@@ -119,7 +119,7 @@ def call_cli_run_job(config_path, backup_type, encrypt=False, sync=False):
         spec.loader.exec_module(cli_module)
 
         # Call the run_job function directly
-        logger.info(f"Calling cli.run_job({config_path}, {backup_type}, encrypt={encrypt}, sync={sync})")
+        logger.debug(f"Calling cli.run_job({config_path}, {backup_type}, encrypt={encrypt}, sync={sync})")
         result = cli_module.run_job(config_path, backup_type, encrypt=encrypt, sync=sync)
         return result
     except Exception as e:
@@ -128,7 +128,7 @@ def call_cli_run_job(config_path, backup_type, encrypt=False, sync=False):
 
 def main():
     """Checks configurations, schedules, and calls cli.py directly if needed."""
-    logger.info("--- Scheduler Check Started ---")
+    logger.debug("--- Scheduler Check Started ---")
     now = datetime.now()
 
     global_config = load_yaml_config(GLOBAL_CONFIG_PATH)
@@ -136,7 +136,7 @@ def main():
     config_files = get_job_configs()
     if not config_files:
         logger.info("No configuration files found in %s", os.path.join(CONFIG_DIR, "jobs"))
-        logger.info("--- Scheduler Check Finished ---")
+        logger.debug("--- Scheduler Check Finished ---")
         ping_uptime_kuma("up", "Scheduler check ran; no job configs found")
         return
 
@@ -228,7 +228,7 @@ def main():
                     break
 
         logger.info(f"Triggered {triggered_jobs_count} job(s) during this check.")
-        logger.info("--- Scheduler Check Finished ---")
+        logger.debug("--- Scheduler Check Finished ---")
         update_status_file()
 
         # Send scheduler check event for mini-chart display

@@ -55,7 +55,7 @@ if AWS_PROFILE:
 event_counter = {}  # Track event IDs locally for reference
 
 
-def create_event(job_name="", event_message="", backup_type="", encrypt=False, sync=False, config=None):
+def create_event(job_name="", event_message="", backup_type="", config=None):
     """
     Create a backup event and report to the dashboard.
 
@@ -94,9 +94,7 @@ def create_event(job_name="", event_message="", backup_type="", encrypt=False, s
         "start_time": start_time,
         "run_id": run_id,
         "server_set_id": server_set_id,
-        "backup_set_name": backup_set_name,
-        "encrypt": encrypt,
-        "sync": sync
+        "backup_set_name": backup_set_name
     }
 
     # Send backup start event
@@ -105,9 +103,7 @@ def create_event(job_name="", event_message="", backup_type="", encrypt=False, s
         backup_type=backup_type,
         run_id=run_id,
         backup_set_id=server_set_id,
-        backup_set_name=backup_set_name,
-        encrypt=encrypt,
-        sync=sync
+        backup_set_name=backup_set_name
     )
 
     return run_id
@@ -130,9 +126,7 @@ def update_event(event_id="", event_message="", status="running"):
             run_id=event_info.get("run_id", event_id),
             backup_set_id=event_info.get("server_set_id", ""),
             backup_set_name=event_info.get("backup_set_name", ""),
-            stage=event_message,
-            encrypt=event_info.get("encrypt", False),
-            sync=event_info.get("sync", False)
+            stage=event_message
         )
 
 
@@ -152,8 +146,6 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
         event_info = event_counter[event_id]
         job_name = event_info.get("job_name", "")
         backup_type = event_info.get("backup_type", "")
-        encrypt = event_info.get("encrypt", False)
-        sync = event_info.get("sync", False)
 
         run_id = event_info.get("run_id", event_id)
         final_backup_set_id = event_info.get("server_set_id", "")
@@ -172,8 +164,6 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 backup_set_id=final_backup_set_id,
                 backup_set_name=final_backup_set_name,
                 duration_seconds=duration_seconds,
-                encrypt=encrypt,
-                sync=sync,
                 success=True,
                 files_backed_up=files_backed_up or 0,
                 bytes_backed_up=bytes_backed_up or 0,
@@ -202,8 +192,6 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 backup_set_id=final_backup_set_id,
                 backup_set_name=final_backup_set_name,
                 duration_seconds=duration_seconds,
-                encrypt=encrypt,
-                sync=sync,
                 success=False,
                 error_message=event_message,
                 files_backed_up=files_backed_up or 0,
@@ -235,8 +223,6 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 job_name=job_name,
                 backup_type=backup_type,
                 backup_set_name=final_backup_set_name,
-                encrypt=encrypt,
-                sync=sync,
                 stage="Skipped",
                 status="skipped",
                 duration_seconds=duration_seconds
@@ -249,8 +235,6 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 backup_set_id=final_backup_set_id,
                 job_name=job_name,
                 backup_type=backup_type,
-                encrypt=encrypt,
-                sync=sync,
                 stage=event_message
             )
 
@@ -450,8 +434,6 @@ try:
                 job_name=job_name,
                 event_message=f"Starting {backup_type} backup",
                 backup_type=backup_type,
-                encrypt=encrypt_effective,
-                sync=sync_effective,
                 config=config  # Pass the config here
             )
 
@@ -479,8 +461,8 @@ try:
             backup_result = run_backup(
                 config,
                 backup_type,
-                encrypt=encrypt_effective,  # Pass effective flags for event reporting
-                sync=sync_effective,         # Actual encryption/sync happens after backup
+                encrypt=encrypt_effective,
+                sync=sync_effective,
                 event_id=event_id,  # Pass our event_id to be updated, not finalized
                 server_set_id=event_counter.get(event_id, {}).get("server_set_id"),
                 job_config_path=config_path,
