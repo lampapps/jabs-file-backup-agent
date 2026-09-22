@@ -59,7 +59,7 @@ def create_event(job_name="", event_message="", backup_type="", config=None):
     """
     Create a backup event and report to the dashboard.
 
-    For full backups: generates a new UUID as the dashboard-side backup_set_id (group identifier).
+    For full backups: generates a new UUID as the dashboard-side group_id (group identifier).
     For incremental/differential: looks up the parent full backup's UUID so the dashboard can group them.
     Each run also gets a unique run_id UUID for per-row dashboard lookup.
 
@@ -102,8 +102,8 @@ def create_event(job_name="", event_message="", backup_type="", config=None):
         job_name=job_name,
         backup_type=backup_type,
         run_id=run_id,
-        backup_set_id=server_set_id,
-        backup_set_name=backup_set_name
+        group_id=server_set_id,
+        group_label=backup_set_name
     )
 
     return run_id
@@ -124,8 +124,8 @@ def update_event(event_id="", event_message="", status="running"):
             job_name=event_info.get("job_name", ""),
             backup_type=event_info.get("backup_type", ""),
             run_id=event_info.get("run_id", event_id),
-            backup_set_id=event_info.get("server_set_id", ""),
-            backup_set_name=event_info.get("backup_set_name", ""),
+            group_id=event_info.get("server_set_id", ""),
+            group_label=event_info.get("backup_set_name", ""),
             stage=event_message
         )
 
@@ -161,8 +161,8 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 job_name=job_name,
                 backup_type=backup_type,
                 run_id=run_id,
-                backup_set_id=final_backup_set_id,
-                backup_set_name=final_backup_set_name,
+                group_id=final_backup_set_id,
+                group_label=final_backup_set_name,
                 duration_seconds=duration_seconds,
                 success=True,
                 files_backed_up=files_backed_up or 0,
@@ -189,8 +189,8 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 job_name=job_name,
                 backup_type=backup_type,
                 run_id=run_id,
-                backup_set_id=final_backup_set_id,
-                backup_set_name=final_backup_set_name,
+                group_id=final_backup_set_id,
+                group_label=final_backup_set_name,
                 duration_seconds=duration_seconds,
                 success=False,
                 error_message=event_message,
@@ -219,10 +219,10 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 event_type="backup_complete",
                 message=event_message,
                 run_id=run_id,
-                backup_set_id=final_backup_set_id,
+                group_id=final_backup_set_id,
                 job_name=job_name,
                 backup_type=backup_type,
-                backup_set_name=final_backup_set_name,
+                group_label=final_backup_set_name,
                 stage="Skipped",
                 status="skipped",
                 duration_seconds=duration_seconds
@@ -232,7 +232,7 @@ def finalize_event(event_id="", status="completed", event_message="", backup_set
                 event_type="warning",
                 message=event_message,
                 run_id=run_id,
-                backup_set_id=final_backup_set_id,
+                group_id=final_backup_set_id,
                 job_name=job_name,
                 backup_type=backup_type,
                 stage=event_message

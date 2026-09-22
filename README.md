@@ -1,5 +1,7 @@
 # JABS Backup Agent
 
+The agent has been retired and is not maintained. It will not not work with the current JABS Dashboard. Please use the snapshot agent instead.
+
 Standalone backup execution module for JABS (Just Another Backup System).
 
 Runs independently on each backup host. It:
@@ -51,7 +53,7 @@ venv/bin/python backup.py --job "Jim Home" --type full --encrypt --sync
 file_backup_agent/
 ├── backup.py              # runs a single backup job (entry point)
 ├── scheduler.py           # cron-style loop, calls backup.py logic in-process
-├── monitoring_client.py   # reports events to JABS Dashboard (send_event, send_backup_start/stage/complete, send_backup_set_purged)
+├── monitoring_client.py   # reports events to JABS Dashboard (send_event, send_backup_start/stage/complete, send_group_purged)
 ├── emailer.py             # immediate email notifications (error / backup_complete), independent of the dashboard's digest
 ├── uptime_kuma_client.py  # optional Uptime Kuma push-monitor heartbeat
 ├── settings.py            # BASE_DIR, ENV_PATH, CONFIG_DIR, DB_PATH, LOG_DIR, VERSION, AGENT_KEY
@@ -144,7 +146,7 @@ If `JABS_DASHBOARD_URL` is set, the agent reports:
 
 - **Scheduler heartbeat** — periodic "I'm alive" signal (no backup context)
 - **Backup lifecycle events** — `send_backup_start`, `send_backup_stage`, `send_backup_complete` (see `monitoring_client.py` and `backup.py:create_event`)
-- **Local set rotation** — `send_backup_set_purged(server_set_id)`, called right after `rotate_backups()` deletes a backup set's local files and DB records. Marks the dashboard's matching `backup_jobs` rows (there may be several — a full backup plus its incremental/differential children share one `backup_set_id`) with `status="purged"` and logs a `"purged"` event on each. This never deletes anything on the dashboard.
+- **Local set rotation** — `send_group_purged(server_set_id)`, called right after `rotate_backups()` deletes a backup set's local files and DB records. Marks the dashboard's matching `backup_jobs` rows (there may be several — a full backup plus its incremental/differential children share one `group_id`) with `status="purged"` and logs a `"purged"` event on each. This never deletes anything on the dashboard.
 
 The dashboard purges (deletes) its own job records on a universal,
 dashboard-side retention schedule (`retention.max_days`) — the agent does

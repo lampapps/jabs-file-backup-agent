@@ -18,7 +18,7 @@ from models.backup_sets import get_or_create_backup_set, get_backup_set_by_job_a
 from models.backup_jobs import get_last_backup_job, get_last_full_backup_job, insert_backup_job, finalize_backup_job
 from models.backup_files import insert_files
 from models.db_core_agent import get_db_connection
-from monitoring_client import send_backup_set_purged
+from monitoring_client import send_group_purged
 from .utils import create_tar_archives, should_exclude, get_merged_exclude_patterns, extract_tar_info, generate_archived_manifest
 from .full import run_full_backup
 
@@ -340,7 +340,7 @@ def rotate_backups(job_dst, keep_sets, logger, config=None):
                     server_set_id = bs_row["server_set_id"] if "server_set_id" in bs_row.keys() else None
                     if server_set_id:
                         try:
-                            send_backup_set_purged(server_set_id)
+                            send_group_purged(server_set_id)
                         except Exception as e:
                             logger.error(f"Error reporting purged backup set '{server_set_id}' to dashboard: {e}")
 

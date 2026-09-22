@@ -29,13 +29,16 @@ CLI_SCRIPT="$SCRIPT_DIR/backup.py"
 PID_FILE="$SCRIPT_DIR/jabs_agent.pid"
 LOG_FILE="$SCRIPT_DIR/data/logs/agent.log"
 
-# Color output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Color output (ANSI-C quoting so these are raw escape bytes, not literal
+# backslash text — needed since show_help's heredoc uses `cat`, not `echo -e`)
+GREEN=$'\033[0;32m'
+RED=$'\033[0;31m'
+YELLOW=$'\033[1;33m'
+BLUE=$'\033[0;34m'
+CYAN=$'\033[0;36m'
+BOLD=$'\033[1m'
+DIM=$'\033[2m'
+NC=$'\033[0m' # No Color
 
 # Helper functions
 print_status() {
@@ -296,12 +299,12 @@ setup_agent() {
     if validate_setup; then
         print_success "Agent setup complete!"
         echo ""
-        echo "Next steps:"
-        echo "  1. Edit secrets/connection settings: $SCRIPT_DIR/.env"
-        echo "  2. Configure: $SCRIPT_DIR/config/global.yaml"
-        echo "  3. Create jobs: $SCRIPT_DIR/config/jobs/*.yaml"
-        echo "  4. Run scheduler: python $SCRIPT_DIR/scheduler.py (or via CRON: @hourly)"
-        echo "  5. Monitor logs: $0 logs"
+        echo -e "${BOLD}Next steps:${NC}"
+        echo -e "  1. Edit secrets/connection settings: ${CYAN}$SCRIPT_DIR/.env${NC}"
+        echo -e "  2. Configure: ${CYAN}$SCRIPT_DIR/config/global.yaml${NC}"
+        echo -e "  3. Create jobs: ${CYAN}$SCRIPT_DIR/config/jobs/*.yaml${NC}"
+        echo -e "  4. Run scheduler: ${CYAN}python $SCRIPT_DIR/scheduler.py${NC} (or via CRON: @hourly)"
+        echo -e "  5. Monitor logs: ${CYAN}$0 logs${NC}"
         return 0
     else
         print_error "Agent setup validation failed."
@@ -344,19 +347,19 @@ reset_app() {
     echo ""
     print_success "Agent reset complete!"
     echo ""
-    echo "Reset items:"
-    echo "  ✓ Database cleared"
-    echo "  ✓ Logs cleared"
-    echo "  ✓ Lock files cleared"
+    echo -e "${BOLD}Reset items:${NC}"
+    echo -e "  ${GREEN}✓${NC} Database cleared"
+    echo -e "  ${GREEN}✓${NC} Logs cleared"
+    echo -e "  ${GREEN}✓${NC} Lock files cleared"
     echo ""
-    echo "Preserved items:"
-    echo "  ✓ Configuration files"
-    echo "  ✓ Application code"
-    echo "  ✓ Virtual environment"
+    echo -e "${BOLD}Preserved items:${NC}"
+    echo -e "  ${GREEN}✓${NC} Configuration files"
+    echo -e "  ${GREEN}✓${NC} Application code"
+    echo -e "  ${GREEN}✓${NC} Virtual environment"
     echo ""
-    echo "Next steps:"
-    echo "  $0 setup   - Re-initialize if needed"
-    echo "  $0 logs    - View scheduler logs"
+    echo -e "${BOLD}Next steps:${NC}"
+    echo -e "  ${CYAN}$0 setup${NC}   - Re-initialize if needed"
+    echo -e "  ${CYAN}$0 logs${NC}    - View scheduler logs"
     return 0
 }
 
@@ -364,18 +367,18 @@ reset_app() {
 # backup job on this host, using this machine's actual paths (including the
 # venv interpreter) so they can be pasted directly into a terminal.
 print_copy_paste_commands() {
-    echo "COPY/PASTE COMMANDS (this host):"
+    echo -e "${BOLD}COPY/PASTE COMMANDS${NC} ${DIM}(this host)${NC}:"
     echo ""
-    echo "  CLI syntax reference (backup.py):"
-    echo "    $PYTHON_VENV $CLI_SCRIPT --job JOB_NAME --type TYPE [--encrypt] [--sync]"
+    echo -e "  ${DIM}CLI syntax reference (backup.py):${NC}"
+    echo -e "    ${CYAN}$PYTHON_VENV $CLI_SCRIPT --job JOB_NAME --type TYPE [--encrypt] [--sync]${NC}"
     echo ""
-    echo "      --job      Job name (matches a file in config/jobs/, without .yaml)"
-    echo "      --type     full | incremental | differential | dryrun"
-    echo "      --encrypt  Encrypt the backup (optional)"
-    echo "      --sync     Sync the backup to S3 after completion (optional)"
+    echo -e "      ${YELLOW}--job${NC}      Job name (matches a file in config/jobs/, without .yaml)"
+    echo -e "      ${YELLOW}--type${NC}     full | incremental | differential | dryrun"
+    echo -e "      ${YELLOW}--encrypt${NC}  Encrypt the backup (optional)"
+    echo -e "      ${YELLOW}--sync${NC}     Sync the backup to S3 after completion (optional)"
     echo ""
-    echo "  Run scheduler manually:"
-    echo "    $PYTHON_VENV $RUN_SCRIPT"
+    echo -e "  ${DIM}Run scheduler manually:${NC}"
+    echo -e "    ${CYAN}$PYTHON_VENV $RUN_SCRIPT${NC}"
     echo ""
 
     local jobs_dir="$SCRIPT_DIR/config/jobs"
@@ -386,14 +389,14 @@ print_copy_paste_commands() {
             found=true
             local job_name
             job_name="$(basename "$job_file" .yaml)"
-            echo "  Run job '$job_name' (dry run example — swap --type/flags per the syntax above):"
-            echo "    $PYTHON_VENV $CLI_SCRIPT --job \"$job_name\" --type dryrun"
+            echo -e "  ${DIM}Run job '$job_name' (dry run example — swap --type/flags per the syntax above):${NC}"
+            echo -e "    ${CYAN}$PYTHON_VENV $CLI_SCRIPT --job \"$job_name\" --type dryrun${NC}"
             echo ""
         done
     fi
 
     if ! $found; then
-        echo "  (No job configs found in $jobs_dir yet — create one first, e.g. from config/templates/job.yaml)"
+        echo -e "  ${YELLOW}(No job configs found in $jobs_dir yet — create one first, e.g. from config/templates/job.yaml)${NC}"
         echo ""
     fi
 }
@@ -402,44 +405,44 @@ print_copy_paste_commands() {
 # Show help
 show_help() {
     cat << EOF
-JABS Agent Launcher
+${BOLD}JABS Agent Launcher${NC}
 
-USAGE:
+${BOLD}USAGE:${NC}
   $0 {setup|status|logs|reset}
   $0 help
 
-COMMANDS:
-  setup        - Setup agent environment
-  status       - Show agent status (if running via CRON)
-  logs         - Follow agent logs
-  reset        - Reset app (clear database, logs, locks)
-  help         - Show this help message
+${BOLD}COMMANDS:${NC}
+  ${CYAN}setup${NC}   Setup agent environment
+  ${CYAN}status${NC}  Show agent status (if running via CRON)
+  ${CYAN}logs${NC}    Follow agent logs
+  ${CYAN}reset${NC}   Reset app (clear database, logs, locks)
+  ${CYAN}help${NC}    Show this help message
 
-DIRECTORIES:
+${BOLD}DIRECTORIES:${NC}
   Agent:       $SCRIPT_DIR
   Venv:        $VENV_PATH
   Config:      $SCRIPT_DIR/config
   Log file:    $LOG_FILE
 
-SETUP:
-  1. Run: $0 setup
+${BOLD}SETUP:${NC}
+  1. Run: ${CYAN}$0 setup${NC}
   2. Edit: $SCRIPT_DIR/.env
   3. Edit: $SCRIPT_DIR/config/global.yaml
   4. Create backup jobs in: $SCRIPT_DIR/config/jobs/
   5. Add CRON job: crontab -e
-     0 * * * * $PYTHON_VENV $RUN_SCRIPT > /dev/null 2>&1
+     ${DIM}0 * * * * $PYTHON_VENV $RUN_SCRIPT > /dev/null 2>&1${NC}
 
-EXAMPLES:
-  # Initial setup
+${BOLD}EXAMPLES:${NC}
+  ${DIM}# Initial setup${NC}
   $0 setup
 
-  # Check logs
+  ${DIM}# Check logs${NC}
   $0 logs
 
-  # View status
+  ${DIM}# View status${NC}
   $0 status
 
-  # Reset app state
+  ${DIM}# Reset app state${NC}
   $0 reset
 
 EOF

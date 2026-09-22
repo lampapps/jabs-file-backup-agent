@@ -1,7 +1,6 @@
 """Client for reporting agent events and metrics to the central JABS dashboard."""
 
 import requests
-import socket
 import time
 import os
 from typing import Optional
@@ -27,31 +26,14 @@ def _auth_headers() -> dict:
     return {"X-API-Key": AGENT_KEY or ""}
 
 
-def get_hostname() -> str:
-    """Get the machine hostname."""
-    return socket.gethostname()
-
-
-def get_ip_address() -> str:
-    """Get the primary IP address."""
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-        s.close()
-        return ip
-    except Exception:
-        return "127.0.0.1"
-
-
 def send_event(
     event_type: str,
     message: str,
     run_id: str = None,
-    backup_set_id: str = None,
+    group_id: str = None,
     job_name: str = None,
     backup_type: str = None,
-    backup_set_name: str = None,
+    group_label: str = None,
     stage: str = None,
     status: str = None,
     duration_seconds: float = None,
@@ -65,8 +47,6 @@ def send_event(
     """Send an event to the dashboard with all fields at the top level."""
     try:
         payload = {
-            "hostname": get_hostname(),
-            "ip_address": get_ip_address(),
             "version": VERSION,
             "agent_type": AGENT_TYPE,
             "event_type": event_type,
@@ -76,14 +56,14 @@ def send_event(
 
         if run_id is not None:
             payload["run_id"] = run_id
-        if backup_set_id is not None:
-            payload["backup_set_id"] = backup_set_id
+        if group_id is not None:
+            payload["group_id"] = group_id
         if job_name is not None:
             payload["job_name"] = job_name
         if backup_type is not None:
             payload["backup_type"] = backup_type
-        if backup_set_name is not None:
-            payload["backup_set_name"] = backup_set_name
+        if group_label is not None:
+            payload["group_label"] = group_label
         if stage is not None:
             payload["stage"] = stage
         if status is not None:
@@ -122,18 +102,18 @@ def send_event(
         return False
 
 
-def send_backup_set_purged(server_set_id: str, message: str = None) -> bool:
+def send_group_purged(server_group_id: str, message: str = None) -> bool:
     """
-    Tell the dashboard that a backup set was rotated (purged) out of local storage.
+    Tell the dashboard that a job group was rotated (purged) out of local storage.
 
-    Marks every backup_jobs row sharing this backup_set_id on the dashboard
+    Marks every backup_jobs row sharing this group_id on the dashboard
     with status='purged' and logs a 'purged' event on each — this does NOT
     delete any dashboard rows. Call this right after a local backup set (and
     its DB records) has actually been deleted (see
     core/backup/common.py:rotate_backups).
 
     Args:
-        server_set_id: The dashboard-side backup_set_id shared by the full
+        server_group_id: The dashboard-side group_id shared by the full
             backup and any incremental/differential children in the set.
         message: Optional human-readable message; defaults to a generic one.
 
@@ -142,46 +122,44 @@ def send_backup_set_purged(server_set_id: str, message: str = None) -> bool:
     """
     try:
         payload = {
-            "hostname": get_hostname(),
-            "ip_address": get_ip_address(),
-            "backup_set_id": server_set_id,
-            "message": message or "Backup set rotated out of local storage",
+            "group_id": server_group_id,
+            "message": message or "Job group rotated out of local storage",
         }
 
         response = requests.post(
-            f"{DASHBOARD_URL}/api/monitoring/backup-set-purged",
+            f"{DASHBOARD_URL}/api/monitoring/group-purged",
             json=payload,
             headers=_auth_headers(),
             timeout=10
         )
 
         if response.status_code == 200:
-            logger.debug(f"Reported purged backup set '{server_set_id}' to dashboard")
+            logger.debug(f"Reported purged job group '{server_group_id}' to dashboard")
             return True
 
-        logger.warning(f"Failed to report purged backup set '{server_set_id}': {response.status_code} {response.text}")
+        logger.warning(f"Failed to report purged job group '{server_group_id}': {response.status_code} {response.text}")
         return False
 
     except requests.exceptions.RequestException as e:
-        logger.debug(f"Failed to report purged backup set '{server_set_id}': {e}")
+        logger.debug(f"Failed to report purged job group '{server_group_id}': {e}")
         return False
 
 
 def send_backup_start(
     job_name: str,
     backup_type: str,
-    backup_set_id: str,
-    backup_set_name: str,
+    group_id: str,
+    group_label: str,
     run_id: str = None
 ) -> bool:
     return send_event(
         event_type="heartbeat",
         message=f"Starting {backup_type} backup for {job_name}",
         run_id=run_id,
-        backup_set_id=backup_set_id,
+        group_id=group_id,
         job_name=job_name,
         backup_type=backup_type,
-        backup_set_name=backup_set_name,
+        group_label=group_label,
         stage="Starting backup"
     )
 
@@ -189,8 +167,8 @@ def send_backup_start(
 def send_backup_stage(
     job_name: str,
     backup_type: str,
-    backup_set_id: str,
-    backup_set_name: str,
+    group_id: str,
+    group_label: str,
     stage: str,
     run_id: str = None
 ) -> bool:
@@ -198,10 +176,10 @@ def send_backup_stage(
         event_type="heartbeat",
         message=f"Backup {job_name}: {stage}",
         run_id=run_id,
-        backup_set_id=backup_set_id,
+        group_id=group_id,
         job_name=job_name,
         backup_type=backup_type,
-        backup_set_name=backup_set_name,
+        group_label=group_label,
         stage=stage
     )
 
@@ -209,8 +187,8 @@ def send_backup_stage(
 def send_backup_complete(
     job_name: str,
     backup_type: str,
-    backup_set_id: str,
-    backup_set_name: str,
+    group_id: str,
+    group_label: str,
     duration_seconds: float,
     run_id: str = None,
     files_backed_up: int = 0,
@@ -234,10 +212,10 @@ def send_backup_complete(
         event_type=event_type,
         message=message,
         run_id=run_id,
-        backup_set_id=backup_set_id,
+        group_id=group_id,
         job_name=job_name,
         backup_type=backup_type,
-        backup_set_name=backup_set_name,
+        group_label=group_label,
         stage="Completed" if success else "Error",
         status=status,
         duration_seconds=duration_seconds,

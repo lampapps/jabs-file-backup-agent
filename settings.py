@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 
 
 
-VERSION = "0.10.5"
+VERSION = "0.10.6"
 
 # Type of agent, reported to the dashboard so it can distinguish agent kinds
-# (e.g. "File Backup", "Docker Backup", "Raspberry Pi Image") on the Hosts page.
+# (e.g. "File Backup", "Docker Backup", "Raspberry Pi Image") on the Agents page.
 AGENT_TYPE = "File Backup"
 # --- Environment Configuration ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -30,8 +30,8 @@ load_dotenv(ENV_PATH)
 ENV_MODE = os.environ.get("ENV_MODE", "production")
 
 # API key this agent uses to authenticate to the dashboard (sent as the
-# X-API-Key header on every request). Generated per-agent when the host is
-# registered on the dashboard's Hosts page.
+# X-API-Key header on every request). Generated per-agent when the agent is
+# registered on the dashboard's Agents page.
 AGENT_KEY = os.environ.get("JABS_AGENT_KEY")
 
 # Uptime Kuma push-monitor URL (see uptime_kuma_client.py). Empty disables it.
